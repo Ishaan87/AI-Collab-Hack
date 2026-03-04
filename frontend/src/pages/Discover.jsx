@@ -1,49 +1,61 @@
-import React from 'react';
-
-const HACKATHONS = [
-    {
-        id: 1,
-        name: "SAH 2.0 (Smart AI Hackathon)",
-        organizer: "AI Tech Alliance",
-        dates: "Nov 15 - Nov 17, 2026",
-        prizePool: "$50,000",
-        tags: ["AI", "Machine Learning", "Open to All"],
-        status: "Registration Open",
-        participants: 1240
-    },
-    {
-        id: 2,
-        name: "Web3 Global Summit '26",
-        organizer: "Crypto Foundation",
-        dates: "Dec 1 - Dec 5, 2026",
-        prizePool: "$100,000",
-        tags: ["Web3", "Blockchain", "DeFi"],
-        status: "Upcoming",
-        participants: 890
-    },
-    {
-        id: 3,
-        name: "Code4Good Initiative",
-        organizer: "Global Non-Profit",
-        dates: "Jan 10 - Jan 12, 2027",
-        prizePool: "Mentorship & Grants",
-        tags: ["Social Impact", "Open Source", "Beginner Friendly"],
-        status: "Registration Open",
-        participants: 450
-    },
-    {
-        id: 4,
-        name: "FinTech Disrupters",
-        organizer: "FinBankorp",
-        dates: "Nov 30 - Dec 2, 2026",
-        prizePool: "$25,000",
-        tags: ["Fintech", "Payment", "Startups"],
-        status: "Registration Open",
-        participants: 760
-    }
-];
+import React, { useState, useEffect } from 'react';
 
 export default function Discover() {
+    const [competitions, setCompetitions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchCompetitions = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('http://localhost:5000/api/competitions');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch competitions');
+                }
+                
+                const data = await response.json();
+                
+                // Transform API data to match UI expectations
+                const transformedCompetitions = data.competitions.map(comp => ({
+                    id: comp.id,
+                    name: comp.title,
+                    organizer: comp.organizer,
+                    dates: formatDates(comp.start_date, comp.end_date),
+                    prizePool: comp.prize_pool,
+                    tags: comp.tags || [],
+                    status: formatStatus(comp.status),
+                    participants: comp.registered_count || 0
+                }));
+                
+                setCompetitions(transformedCompetitions);
+                setError(null);
+            } catch (err) {
+                console.error('Error fetching competitions:', err);
+                setError(err.message);
+                setCompetitions([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCompetitions();
+    }, []);
+
+    const formatDates = (startDate, endDate) => {
+        if (!startDate || !endDate) return 'TBD';
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
+    };
+
+    const formatStatus = (status) => {
+        if (!status) return 'Upcoming';
+        return status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
+    };
+
     return (
         <div className="w-full h-full space-y-8 animate-in fade-in duration-500 font-sans">
             <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-8 space-y-4 md:space-y-0">
@@ -61,12 +73,31 @@ export default function Discover() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {HACKATHONS.map((event) => (
-                    <div
-                        key={event.id}
-                        className="group bg-white rounded-2xl border border-[#E5E7EB] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 flex flex-col overflow-hidden"
-                    >
+            {loading && (
+                <div className="flex justify-center items-center h-64">
+                    <p className="text-[#5C5C5C] text-[16px]">Loading competitions...</p>
+                </div>
+            )}
+
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
+                    <p>Error loading competitions: {error}</p>
+                </div>
+            )}
+
+            {!loading && !error && competitions.length === 0 && (
+                <div className="flex justify-center items-center h-64">
+                    <p className="text-[#5C5C5C] text-[16px]">No competitions found.</p>
+                </div>
+            )}
+
+            {!loading && !error && competitions.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {competitions.map((event) => (
+                        <div
+                            key={event.id}
+                            className="group bg-white rounded-2xl border border-[#E5E7EB] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 flex flex-col overflow-hidden"
+                        >
                         {/* Banner */}
                         <div className="h-32 bg-[#E8DDFF] w-full relative">
                             <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-[12px] font-[600] px-2.5 py-1 rounded-full text-[#7856FF]">
@@ -113,7 +144,7 @@ export default function Discover() {
                         </div>
                     </div>
                 ))}
-            </div>
+                </div>
+            )}
         </div>
-    );
-}
+    );}
