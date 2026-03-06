@@ -4,7 +4,7 @@ import { getAssessmentStatus, submitAssessment } from '../controllers/assessment
 
 const router = express.Router();
 
-router.get('/status', auth, getAssessmentStatus);   // GET  /api/assessment/status
-router.post('/submit', auth, submitAssessment);      // POST /api/assessment/submit
+router.get('/status', auth, getAssessmentStatus);  // GET  /api/assessment/status
+router.post('/submit', auth, submitAssessment);     // POST /api/assessment/submit
 
 export default router;

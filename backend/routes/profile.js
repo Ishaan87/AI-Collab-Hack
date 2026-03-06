@@ -2,7 +2,7 @@ import express from 'express';
 import auth from '../middleware/auth.js';
 import {
   getMyProfile, getPublicProfile, updateProfile,
-  getAllSkills, addSkill, removeSkill,
+  addSkill, removeSkill,
   addLinkedProfile,
   addCertificate, deleteCertificate,
   addPastCompetition, deletePastCompetition,
@@ -12,14 +12,11 @@ import {
 
 const router = express.Router();
 
-// Skills master list (public)
-router.get('/skills', getAllSkills);
-
 // My profile (authenticated)
 router.get('/me',                          auth, getMyProfile);
 router.put('/me',                          auth, updateProfile);
 router.post('/me/skills',                  auth, addSkill);
-router.delete('/me/skills/:skill_id',      auth, removeSkill);
+router.delete('/me/skills/:id',            auth, removeSkill);   // ← changed :skill_id to :id
 router.post('/me/linked-profiles',         auth, addLinkedProfile);
 router.post('/me/certificates',            auth, addCertificate);
 router.delete('/me/certificates/:id',      auth, deleteCertificate);
