@@ -9,7 +9,7 @@ import profileRoutes     from './routes/profile.js';
 import competitionRoutes from './routes/competitions.js';
 import teamRoutes        from './routes/teams.js';
 import leaderboardRoutes from './routes/leaderboard.js';
-import assessmentRoutes  from './routes/assessment.js';
+import assessmentRoutes  from './routes/assessmentRoutes.js';
 import { inviteRouter }  from './routes/invites.js';
 import { notifRouter }   from './routes/notifications.js';
 
