@@ -9,6 +9,9 @@ import profileRoutes     from './routes/profile.js';
 import competitionRoutes from './routes/competitions.js';
 import teamRoutes        from './routes/teams.js';
 import leaderboardRoutes from './routes/leaderboard.js';
+import assessmentRoutes  from './routes/assessment.js';
+import { inviteRouter }  from './routes/invites.js';
+import { notifRouter }   from './routes/notifications.js';
 
 dotenv.config();
 
@@ -43,11 +46,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ─── ROUTES ───────────────────────────────────────────────────────────────────
-app.use('/api/auth',         authRoutes);
-app.use('/api/profile',      profileRoutes);
-app.use('/api/competitions', competitionRoutes);
-app.use('/api/teams',        teamRoutes);
-app.use('/api/leaderboard',  leaderboardRoutes);
+app.use('/api/auth',          authRoutes);
+app.use('/api/profile',       profileRoutes);
+app.use('/api/competitions',  competitionRoutes);
+app.use('/api/teams',         teamRoutes);
+app.use('/api/leaderboard',   leaderboardRoutes);
+app.use('/api/assessment',    assessmentRoutes);
+app.use('/api/invites',       inviteRouter);
+app.use('/api/notifications', notifRouter);
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_, res) =>
