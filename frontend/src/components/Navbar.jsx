@@ -65,12 +65,12 @@ const Navbar = () => {
                         ? 'text-white border-white/20 hover:bg-white/10'
                         : 'text-gray-900 border-gray-300/80 hover:bg-gray-50'
                         }`}>Login</Link>
-                    <button className={`px-6 py-3 text-[15px] font-medium rounded-[14px] transition-colors shadow-sm flex items-center gap-2 tracking-wide border ${isDark
+                    <Link to="/login" state={{ signup: true }} className={`px-6 py-3 text-[15px] font-medium rounded-[14px] transition-colors shadow-sm flex items-center gap-2 tracking-wide border ${isDark
                         ? 'bg-white text-black border-white hover:bg-gray-200'
                         : 'bg-[#111] text-white border-[#111] hover:bg-gray-800'
                         }`}>
                         Sign Up
-                    </button>
+                    </Link>
                 </div>
             </div>
         </nav>

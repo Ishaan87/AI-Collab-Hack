@@ -501,6 +501,41 @@ export default function ProfileBuilder() {
         }
     };
 
+    const handleSkip = async () => {
+        setLoading(true);
+        try {
+            const dummyData = {
+                id: user.id,
+                full_name: formData.basicInfo.full_name || 'Dummy User',
+                username: formData.basicInfo.username || `user${Math.floor(Math.random() * 10000)}`,
+                city: formData.basicInfo.city || 'San Francisco',
+                bio: formData.basicInfo.bio || 'I am a passionate software engineer excited about building awesome stuff.',
+                avatar_url: formData.basicInfo.avatar_url || '',
+                profile_completed: true,
+                collaborative_data: {
+                    skills: { Frontend: 80, Backend: 70, 'UI/UX': 60 },
+                    links: { github: 'https://github.com/dummy', linkedin: 'https://linkedin.com/in/dummy' },
+                    certificates: [{ name: 'Certified Developer', issuer: 'Tech Org', date: '2026' }],
+                    competitions: [{ name: 'Hackathon 2026', year: 2026, role: 'Developer', placement: '1st' }],
+                    featuredProject: { title: 'Cool AI App', description: 'A futuristic app built with AI agents.', link: 'https://github.com/dummy/app' },
+                    preferences: { hours: 20, role: 'Flexible', type: 'Both' }
+                },
+                updated_at: new Date()
+            };
+
+            const { error } = await supabase.from('profiles').upsert(dummyData);
+            if (error) throw error;
+
+            await fetchProfile(user.id);
+            navigate('/discover'); // Adjust to your default app home route
+        } catch (error) {
+            alert('Error saving dummy profile');
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const STEP_TITLES = ['Basic Info', 'Skills', 'Links', 'Certificates', 'Competitions', 'Project', 'Preferences'];
 
     // While auth is resolving, show a loading spinner
@@ -632,22 +667,33 @@ export default function ProfileBuilder() {
                                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                                 </button>
 
-                                {step < 7 ? (
+                                <div className="flex items-center gap-4">
                                     <button
-                                        onClick={handleNext}
-                                        className="flex items-center bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-[0_4px_14px_rgba(0,0,0,0.1)] backdrop-blur-md transition-all transform hover:-translate-y-0.5"
-                                    >
-                                        Continue <ChevronRight className="w-4 h-4 ml-1" />
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={handleSubmit}
+                                        onClick={handleSkip}
                                         disabled={loading}
-                                        className="flex items-center bg-white text-[#100033] hover:bg-gray-100 px-8 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all transform hover:-translate-y-0.5 disabled:opacity-70"
+                                        type="button"
+                                        className="text-sm font-medium text-white/60 hover:text-white transition-colors underline-offset-4 hover:underline mr-2"
                                     >
-                                        {loading ? 'Saving...' : 'Complete Profile'} <Check className="w-4 h-4 ml-2 border border-[#100033] rounded-full p-0.5" />
+                                        Skip for now
                                     </button>
-                                )}
+
+                                    {step < 7 ? (
+                                        <button
+                                            onClick={handleNext}
+                                            className="flex items-center bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-[0_4px_14px_rgba(0,0,0,0.1)] backdrop-blur-md transition-all transform hover:-translate-y-0.5"
+                                        >
+                                            Continue <ChevronRight className="w-4 h-4 ml-1" />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={handleSubmit}
+                                            disabled={loading}
+                                            className="flex items-center bg-white text-[#100033] hover:bg-gray-100 px-8 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all transform hover:-translate-y-0.5 disabled:opacity-70"
+                                        >
+                                            {loading ? 'Saving...' : 'Complete Profile'} <Check className="w-4 h-4 ml-2 border border-[#100033] rounded-full p-0.5" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
 
                         </div>

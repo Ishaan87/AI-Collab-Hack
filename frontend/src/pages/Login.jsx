@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LoginShader from '../components/LoginShader';
 
 export default function Login() {
     const { signInWithGoogle, signInWithGithub, signInWithEmail, signUpWithEmail, user, profile, loading: authLoading } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const [isSignUp, setIsSignUp] = useState(false);
+    const [isSignUp, setIsSignUp] = useState(location.state?.signup || false);
+
+    useEffect(() => {
+        if (location.state?.signup !== undefined) {
+            setIsSignUp(location.state.signup);
+        }
+    }, [location.state?.signup]);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
