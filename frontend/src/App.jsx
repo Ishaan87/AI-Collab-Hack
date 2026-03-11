@@ -25,7 +25,10 @@ function App() {
 
           {/* Fallback routes */}
           <Route path="/my-teams" element={<div className="p-8 text-indigo-900 font-bold">My Teams (Coming Soon)</div>} />
-          <Route path="/leaderboard" element={<div className="p-8 text-indigo-900 font-bold">Leaderboard (Coming Soon)</div>} />
+          <Route path="/sponsored" element={<div className="p-8 text-indigo-900 font-bold">Sponsored Challenges (Coming Soon)</div>} />
+          <Route path="/recommendations" element={<div className="p-8 text-indigo-900 font-bold">My Recommendations (Coming Soon)</div>} />
+          <Route path="/host" element={<div className="p-8 text-indigo-900 font-bold">Host (Coming Soon)</div>} />
+          <Route path="/activity" element={<div className="p-8 text-indigo-900 font-bold">My Activity (Coming Soon)</div>} />
         </Route>
 
         <Route path="/profile/build" element={<ProfileBuilder />} />

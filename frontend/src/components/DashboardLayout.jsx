@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, Link } from 'react-router-dom';
-import { Compass, Users, Target, LayoutDashboard, User, LogIn } from 'lucide-react';
+import { Compass, Users, Target, LayoutDashboard, User, LogIn, Briefcase, Activity, PlusSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
@@ -10,15 +10,18 @@ const Sidebar = () => {
         { name: 'Discover', path: '/discover', icon: Compass },
         { name: 'Smart Match', path: '/smart-match', icon: Users },
         { name: 'My Teams', path: '/my-teams', icon: Target },
-        { name: 'Leaderboard', path: '/leaderboard', icon: LayoutDashboard },
+        { name: 'Sponsored Challenges 💼', path: '/sponsored', icon: Briefcase },
+        { name: 'My recommendations', path: '/recommendations', icon: LayoutDashboard },
+        { name: 'Host', path: '/host', icon: PlusSquare },
+        { name: 'My activity', path: '/activity', icon: Activity },
         { name: 'Profile', path: '/profile', icon: User },
     ];
 
     return (
         <div className="w-[280px] bg-white border-r border-[#E5E7EB] h-screen fixed top-0 left-0 flex flex-col p-6 shadow-[1px_0_0_0_rgba(0,0,0,0.02)] z-10 transition-all font-sans">
             <div className="flex items-center space-x-3 mb-10 mt-2 pl-1">
-                <div className="bg-[#7856FF] text-white w-9 h-9 rounded-xl shrink-0 flex items-center justify-center font-bold text-xl leading-none">
-                    K
+                <div className="bg-gradient-to-br from-[#7856FF] to-[#00C2FF] text-white w-9 h-9 rounded-xl shadow-md shrink-0 flex items-center justify-center font-bold text-xl leading-none">
+                    M
                 </div>
                 <span className="text-2xl font-bold tracking-tight text-[#201F24] leading-none">MERIDIAN</span>
             </div>
