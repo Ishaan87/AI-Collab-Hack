@@ -10,7 +10,7 @@ const Sidebar = () => {
         { name: 'Discover', path: '/discover', icon: Compass },
         { name: 'Smart Match', path: '/smart-match', icon: Users },
         { name: 'My Teams', path: '/my-teams', icon: Target },
-        { name: 'Sponsored Challenges 💼', path: '/sponsored', icon: Briefcase },
+        { name: 'Sponsored Challenges', path: '/sponsored', icon: Briefcase },
         { name: 'My recommendations', path: '/recommendations', icon: LayoutDashboard },
         { name: 'Host', path: '/host', icon: PlusSquare },
         { name: 'My activity', path: '/activity', icon: Activity },
