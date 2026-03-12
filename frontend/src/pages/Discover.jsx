@@ -103,9 +103,9 @@ const Discover = () => {
                 <img
                   src={tab.imgSrc}
                   alt={tab.label}
-                  className={`mt-auto w-auto h-[140px] object-contain z-10 transition-all duration-300 ${isActive
+                  className={`mt-auto w-auto h-[140px] object-contain z-10 transition-all duration-300 dark:invert ${isActive
                     ? 'opacity-100'
-                    : 'opacity-40 dark:opacity-20 mix-blend-multiply dark:mix-blend-luminosity'
+                    : 'opacity-40 dark:opacity-50 mix-blend-multiply dark:mix-blend-normal'
                     }`}
                 />
 
