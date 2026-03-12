@@ -17,7 +17,7 @@ const navSections = [
         key: 'nav',
         items: [
             { name: 'Discover', path: '/discover', icon: Compass },
-            { name: 'Smart Match', path: '/smart-match', icon: Users },
+            // { name: 'Smart Match', path: '/smart-match', icon: Users },
         ],
     },
     {

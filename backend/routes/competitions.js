@@ -1,18 +1,24 @@
 import express from 'express';
 import auth from '../middleware/auth.js';
+import optionalAuth from '../middleware/optionalAuth.js';
 import {
-  getCompetitions, getCompetition, createCompetition,
-  registerForCompetition, withdrawFromCompetition,
-  getMyCompetitions,
+  getCompetitions, registerForCompetition, getMyCompetitions,
+  createCompetition, getCompetition, withdrawFromCompetition,
+  getWorkflow, getCollabSuggestions,
+  getMyHostedEvents, getEventRegistrants,
 } from '../controllers/competitionController.js';
 
 const router = express.Router();
 
-router.get('/',              getCompetitions);
-router.get('/my',            auth, getMyCompetitions);
-router.get('/:id',           getCompetition);
-router.post('/',             auth, createCompetition);
-router.post('/:id/register', auth, registerForCompetition);
-router.patch('/:id/withdraw',auth, withdrawFromCompetition);
+router.get('/',                      optionalAuth, getCompetitions);
+router.get('/my',                    auth,         getMyCompetitions);
+router.get('/hosted',                auth,         getMyHostedEvents);
+router.get('/:id',                   optionalAuth, getCompetition);
+router.post('/',                     auth,         createCompetition);
+router.post('/:id/register',         auth,         registerForCompetition);
+router.delete('/:id/withdraw',       auth,         withdrawFromCompetition);
+router.get('/:id/workflow',          optionalAuth, getWorkflow);
+router.post('/:id/collab',           auth,         getCollabSuggestions);
+router.get('/:id/registrants',       auth,         getEventRegistrants);
 
 export default router;

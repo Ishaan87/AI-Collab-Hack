@@ -1,0 +1,1 @@
+postgresql://kinetic_553d_user:bLdPX1jDKwhTCZLGkxeTrxFVi6l7j9sm@dpg-d6libpp5pdvs73ds1tvg-a/kinetic_553d

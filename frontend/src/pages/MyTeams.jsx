@@ -1,80 +1,151 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, X } from 'lucide-react';
-import { api } from '../api';
 import { useNavigate } from 'react-router-dom';
+import {
+  Users, Loader2, AlertCircle, CheckCircle2, XCircle,
+  Clock, Trophy, ChevronRight, Bell, Inbox
+} from 'lucide-react';
+import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
-const timeAgo = (dateStr) => {
-  if (!dateStr) return 'Unknown';
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins  = Math.floor(diff / 60000);
-  const hours = Math.floor(mins / 60);
-  const days  = Math.floor(hours / 24);
-  if (days > 0)  return `${days} day${days > 1 ? 's' : ''} ago`;
-  if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  return `${mins} min${mins !== 1 ? 's' : ''} ago`;
+const formatDate = (d) => {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-// ─── Join Team Modal ──────────────────────────────────────────────────────────
-function JoinModal({ onClose, onJoined }) {
-  const [code, setCode]     = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState('');
-
-  const handleJoin = async () => {
-    if (!code.trim()) return;
-    try {
-      setLoading(true); setError('');
-      await api.post('/teams/join', { invite_code: code.trim() });
-      onJoined();
-      onClose();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+function InviteCard({ invite, onAccept, onDecline, accepting, declining }) {
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-[#201F24]">Join a Team</h3>
-          <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-gray-600" /></button>
+    <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 space-y-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-shadow">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E8DDFF] to-[#DDD6FE] flex items-center justify-center shrink-0">
+            <span className="text-[#7856FF] font-[700] text-[14px]">
+              {(invite.sender_name || invite.sender_username || '?').charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div>
+            <p className="text-[14px] font-[600] text-[#201F24]">
+              {invite.sender_name || invite.sender_username}
+            </p>
+            <p className="text-[12px] text-[#9CA3AF]">invited you to team up</p>
+          </div>
         </div>
-        <p className="text-sm text-[#5C5C5C] mb-4">Enter the invite code shared by your team leader.</p>
-        <input
-          value={code}
-          onChange={e => setCode(e.target.value.toUpperCase())}
-          placeholder="e.g. A3F9B2"
-          className="w-full px-4 py-3 border border-[#E5E7EB] rounded-xl text-center text-lg font-mono tracking-widest focus:ring-2 focus:ring-[#7856FF] outline-none mb-3"
-        />
-        {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+        <span className="text-[11px] text-[#9CA3AF] whitespace-nowrap shrink-0">{formatDate(invite.created_at)}</span>
+      </div>
+
+      {invite.competition_title && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-[#F4F0FF] border border-[#DDD6FE] rounded-xl">
+          <Trophy className="w-3.5 h-3.5 text-[#7856FF] shrink-0" />
+          <span className="text-[13px] font-[500] text-[#7856FF] line-clamp-1">{invite.competition_title}</span>
+        </div>
+      )}
+
+      {invite.message && (
+        <p className="text-[13px] text-[#5C5C5C] leading-relaxed italic bg-[#FAFAFA] border border-[#F3F4F6] rounded-xl px-4 py-3">
+          "{invite.message}"
+        </p>
+      )}
+
+      <div className="flex gap-2 pt-1">
         <button
-          onClick={handleJoin}
-          disabled={loading || !code.trim()}
-          className="w-full py-3 bg-[#7856FF] text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center space-x-2"
+          onClick={() => onAccept(invite.id)}
+          disabled={accepting === invite.id || declining === invite.id}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#7856FF] text-white rounded-xl text-[13px] font-[600] hover:bg-[#6846EB] disabled:opacity-60 transition-colors"
         >
-          {loading ? <><Loader2 className="w-4 h-4 animate-spin" /><span>Joining...</span></> : <span>Join Team</span>}
+          {accepting === invite.id
+            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            : <CheckCircle2 className="w-3.5 h-3.5" />
+          }
+          Accept
+        </button>
+        <button
+          onClick={() => onDecline(invite.id)}
+          disabled={accepting === invite.id || declining === invite.id}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 border border-[#E5E7EB] text-[#5C5C5C] rounded-xl text-[13px] font-[500] hover:bg-red-50 hover:text-red-500 hover:border-red-200 disabled:opacity-60 transition-colors"
+        >
+          {declining === invite.id
+            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            : <XCircle className="w-3.5 h-3.5" />
+          }
+          Decline
         </button>
       </div>
     </div>
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+function TeamCard({ team }) {
+  const navigate = useNavigate();
+  return (
+    <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 space-y-4 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:border-[#DDD6FE] transition-all duration-200 group">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7856FF] to-[#9B7AFF] flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-[15px] font-[600] text-[#201F24] group-hover:text-[#7856FF] transition-colors">
+              {team.name}
+            </h3>
+            <p className="text-[12px] text-[#9CA3AF]">{team.member_count || team.members?.length || 0} members</p>
+          </div>
+        </div>
+        {team.competition_title && (
+          <span className="text-[11px] font-[500] text-[#9CA3AF] max-w-[120px] text-right line-clamp-2">{team.competition_title}</span>
+        )}
+      </div>
+
+      {/* Members avatars */}
+      {team.members?.length > 0 && (
+        <div className="flex items-center gap-1.5">
+          {team.members.slice(0, 5).map((m, i) => (
+            <div
+              key={i}
+              className="w-7 h-7 rounded-full bg-[#E8DDFF] flex items-center justify-center text-[11px] font-[700] text-[#7856FF] border-2 border-white -ml-1 first:ml-0 overflow-hidden"
+              title={m.full_name || m.username}
+            >
+              {m.avatar_url
+                ? <img src={m.avatar_url} alt="" className="w-full h-full object-cover" />
+                : (m.full_name || m.username || '?').charAt(0)
+              }
+            </div>
+          ))}
+          {team.members.length > 5 && (
+            <span className="text-[12px] text-[#9CA3AF] ml-1">+{team.members.length - 5}</span>
+          )}
+        </div>
+      )}
+
+      {team.competition_id && (
+        <button
+          onClick={() => navigate(`/competitions/${team.competition_id}`)}
+          className="flex items-center gap-1.5 text-[12px] font-[500] text-[#7856FF] hover:underline"
+        >
+          View competition <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function MyTeams() {
   const navigate = useNavigate();
-  const [teams, setTeams]           = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState('');
-  const [showJoin, setShowJoin]     = useState(false);
+  const [teams, setTeams]     = useState([]);
+  const [invites, setInvites] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState('');
+  const [accepting, setAccepting] = useState(null);
+  const [declining, setDeclining] = useState(null);
+  const [tab, setTab]         = useState('teams'); // 'teams' | 'invites'
 
-  const fetchTeams = async () => {
+  const fetchAll = async () => {
     try {
       setLoading(true);
-      const data = await api.get('/teams/my');
-      setTeams(data.teams);
-      setError('');
+      const [teamsData, invitesData] = await Promise.all([
+        api.get('/teams/my'),
+        api.get('/invites/my'),
+      ]);
+      setTeams(teamsData.teams || []);
+      setInvites((invitesData.invites || []).filter(i => i.status === 'pending'));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -82,136 +153,157 @@ export default function MyTeams() {
     }
   };
 
-  useEffect(() => { fetchTeams(); }, []);
+  useEffect(() => { fetchAll(); }, []);
 
-  const getStatusInfo = (team) => {
-    const isFull = team.member_count >= team.max_members;
-    if (!team.is_open || isFull) return { label: 'Full', color: 'bg-red-400' };
-    if (team.competition_status === 'ongoing') return { label: 'Active', color: 'bg-green-500' };
-    if (team.member_count < team.max_members) return { label: 'Looking for members', color: 'bg-orange-400' };
-    return { label: 'Active', color: 'bg-green-500' };
+  const handleAccept = async (inviteId) => {
+    try {
+      setAccepting(inviteId);
+      await api.post(`/invites/${inviteId}/accept`);
+      setInvites(prev => prev.filter(i => i.id !== inviteId));
+      fetchAll(); // refresh teams
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAccepting(null);
+    }
+  };
+
+  const handleDecline = async (inviteId) => {
+    try {
+      setDeclining(inviteId);
+      await api.post(`/invites/${inviteId}/decline`);
+      setInvites(prev => prev.filter(i => i.id !== inviteId));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeclining(null);
+    }
   };
 
   return (
-    <div className="w-full h-full space-y-8 animate-in fade-in duration-500 font-sans">
-      {showJoin && <JoinModal onClose={() => setShowJoin(false)} onJoined={fetchTeams} />}
+    <div className="p-6 md:p-8 space-y-8">
 
-      <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-8 space-y-4 md:space-y-0">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <h1 className="text-[32px] font-[600] tracking-tight text-[#201F24] mb-2">My Teams</h1>
-          <p className="text-[#5C5C5C] text-[16px]">Manage your teams, roles, and open invitations.</p>
+          <h1 className="text-[32px] font-[600] tracking-tight text-[#201F24] mb-1">My Teams</h1>
+          <p className="text-[#5C5C5C] text-[16px]">Your active teams and pending collaboration invites.</p>
         </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={() => setShowJoin(true)}
-            className="px-[20px] py-[10px] bg-white border border-[#E5E7EB] text-[#201F24] rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.05)] font-[500] hover:bg-[#FAFAFA] transition-colors text-[14px]"
-          >
-            Join Team
-          </button>
-          <button
-            onClick={() => navigate('/discover')}
-            className="px-[20px] py-[10px] bg-[#7856FF] hover:bg-[#6846EB] text-white rounded-full font-[500] transition-colors text-[14px]"
-          >
-            Create New Team
-          </button>
-        </div>
+        <button
+          onClick={() => navigate('/smart-match')}
+          className="flex items-center gap-2 px-5 py-2.5 bg-[#7856FF] text-white rounded-full font-[500] text-[14px] hover:bg-[#6846EB] transition-colors shadow-sm shadow-[#7856FF]/20"
+        >
+          <Users className="w-4 h-4" /> Find Teammates
+        </button>
       </div>
 
+      {/* Error */}
+      {error && (
+        <div className="flex items-center gap-3 px-5 py-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-[14px]">
+          <AlertCircle className="w-4 h-4 shrink-0" /> {error}
+        </div>
+      )}
+
+      {/* Tab toggle */}
+      <div className="flex gap-1 p-1 bg-[#F3F4F6] rounded-xl w-fit">
+        <button
+          onClick={() => setTab('teams')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-[500] transition-all ${
+            tab === 'teams'
+              ? 'bg-white text-[#201F24] shadow-sm'
+              : 'text-[#5C5C5C] hover:text-[#201F24]'
+          }`}
+        >
+          <Users className="w-3.5 h-3.5" />
+          Teams
+          {teams.length > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 bg-[#F4F0FF] text-[#7856FF] text-[11px] font-[700] rounded-full">
+              {teams.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setTab('invites')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-[500] transition-all ${
+            tab === 'invites'
+              ? 'bg-white text-[#201F24] shadow-sm'
+              : 'text-[#5C5C5C] hover:text-[#201F24]'
+          }`}
+        >
+          <Bell className="w-3.5 h-3.5" />
+          Invites
+          {invites.length > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 bg-[#7856FF] text-white text-[11px] font-[700] rounded-full">
+              {invites.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Loading */}
       {loading && (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex items-center justify-center h-48">
           <Loader2 className="w-6 h-6 animate-spin text-[#7856FF]" />
         </div>
       )}
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg text-sm">{error}</div>
-      )}
-
-      {!loading && !error && teams.length === 0 && (
-        <div className="flex flex-col items-center justify-center h-64 space-y-4 text-center">
-          <div className="w-16 h-16 bg-[#F4F0FF] rounded-2xl flex items-center justify-center text-2xl">👥</div>
-          <p className="text-[#201F24] font-semibold text-lg">No teams yet</p>
-          <p className="text-[#5C5C5C] text-sm max-w-xs">Register for a competition and create or join a team to get started.</p>
-          <button onClick={() => navigate('/discover')} className="px-5 py-2.5 bg-[#7856FF] text-white rounded-full text-sm font-medium">
-            Browse Competitions
-          </button>
-        </div>
-      )}
-
-      {!loading && !error && teams.length > 0 && (
-        <div className="grid grid-cols-1 gap-4">
-          {teams.map((team) => {
-            const statusInfo = getStatusInfo(team);
-            return (
-              <div
-                key={team.id}
-                className="group bg-white rounded-2xl border border-[#E5E7EB] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 p-6 flex flex-col md:flex-row md:items-center justify-between"
-              >
-                <div className="flex items-center space-x-5 mb-4 md:mb-0">
-                  <div className="w-14 h-14 rounded-xl bg-[#E8DDFF] text-[#7856FF] flex items-center justify-center text-xl font-bold border border-[#7856FF]/20">
-                    {team.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h3 className="text-[18px] font-[600] text-[#201F24] group-hover:text-[#7856FF] transition-colors">
-                      {team.name}
-                    </h3>
-                    <div className="text-[14px] text-[#5C5C5C] flex items-center space-x-2 mt-1">
-                      <span className="font-medium px-2 py-0.5 bg-[#FAFAFA] border border-[#E5E7EB] rounded-md capitalize">
-                        {team.my_role}
-                      </span>
-                      <span>•</span>
-                      <span>{team.member_count}/{team.max_members} Members</span>
-                    </div>
-                    {/* Member avatars */}
-                    {team.members?.length > 0 && (
-                      <div className="flex -space-x-2 mt-2">
-                        {team.members.slice(0, 5).map(m => (
-                          <div key={m.id} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-[#E8DDFF]">
-                            {m.avatar_url
-                              ? <img src={m.avatar_url} alt={m.username} className="w-full h-full object-cover" />
-                              : <div className="w-full h-full flex items-center justify-center text-[9px] font-bold text-[#7856FF]">
-                                  {(m.full_name || m.username || '?').charAt(0).toUpperCase()}
-                                </div>
-                            }
-                          </div>
-                        ))}
-                        {team.members.length > 5 && (
-                          <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[9px] text-gray-500">
-                            +{team.members.length - 5}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col md:items-end space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <span className={`w-2.5 h-2.5 rounded-full ${statusInfo.color}`}></span>
-                    <span className="text-[14px] text-[#201F24] font-medium">{statusInfo.label}</span>
-                  </div>
-                  <div className="text-[13px] text-[#5C5C5C]">Last active {timeAgo(team.last_active_at)}</div>
-                  {team.competition_title && (
-                    <div className="text-[12px] text-[#7856FF] font-medium">
-                      Registered for {team.competition_title}
-                    </div>
-                  )}
-                  {team.my_role === 'leader' && team.invite_code && (
-                    <div className="text-[11px] text-gray-400 font-mono">
-                      Code: <span className="font-bold text-gray-600 select-all">{team.invite_code}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-4 md:mt-0 md:ml-6">
-                  <button className="w-full md:w-auto px-4 py-2 bg-white border border-[#E5E7EB] hover:bg-[#FAFAFA] text-[#201F24] rounded-lg text-[14px] font-[500] transition-colors">
-                    Manage
-                  </button>
-                </div>
+      {/* Teams tab */}
+      {!loading && tab === 'teams' && (
+        <>
+          {teams.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 space-y-5 bg-white border border-[#E5E7EB] rounded-2xl">
+              <div className="w-16 h-16 bg-[#F4F0FF] rounded-2xl flex items-center justify-center">
+                <Users className="w-8 h-8 text-[#7856FF]" />
               </div>
-            );
-          })}
-        </div>
+              <div className="text-center">
+                <h3 className="text-[18px] font-[600] text-[#201F24]">No teams yet</h3>
+                <p className="text-[#5C5C5C] text-[14px] mt-1">Join a competition and connect with teammates to form your first team.</p>
+              </div>
+              <button
+                onClick={() => navigate('/smart-match')}
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#7856FF] text-white rounded-xl font-[500] text-[14px] hover:bg-[#6846EB] transition-colors"
+              >
+                Find Teammates
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {teams.map(team => (
+                <TeamCard key={team.id} team={team} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Invites tab */}
+      {!loading && tab === 'invites' && (
+        <>
+          {invites.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 space-y-5 bg-white border border-[#E5E7EB] rounded-2xl">
+              <div className="w-16 h-16 bg-[#F4F0FF] rounded-2xl flex items-center justify-center">
+                <Inbox className="w-8 h-8 text-[#7856FF]" />
+              </div>
+              <div className="text-center">
+                <h3 className="text-[18px] font-[600] text-[#201F24]">No pending invites</h3>
+                <p className="text-[#5C5C5C] text-[14px] mt-1">When someone invites you to collaborate, it'll appear here.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {invites.map(invite => (
+                <InviteCard
+                  key={invite.id}
+                  invite={invite}
+                  onAccept={handleAccept}
+                  onDecline={handleDecline}
+                  accepting={accepting}
+                  declining={declining}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
