@@ -54,6 +54,8 @@ export default function CompetitionDetail() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [showRegModal, setShowRegModal] = useState(false);
   const [showCollab, setShowCollab]     = useState(false);
+  const [showWorkflow, setShowWorkflow] = useState(false);
+  const [generatingWorkflow, setGeneratingWorkflow] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -176,13 +178,41 @@ export default function CompetitionDetail() {
             )}
 
             {/* AI Workflow */}
-            {comp.ai_workflow && Array.isArray(comp.ai_workflow) && comp.ai_workflow.length > 0 && (
-              <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-4 h-4 text-[#7856FF]" />
+            <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#7856FF]" />
                   <h2 className="text-[16px] font-[600] text-[#374151]">AI-Generated Strategy & Workflow</h2>
                 </div>
-                <div className="space-y-4">
+                {!showWorkflow && (
+                  <button
+                    onClick={async () => {
+                      if (comp.ai_workflow && Array.isArray(comp.ai_workflow) && comp.ai_workflow.length > 0) {
+                        setShowWorkflow(true);
+                      } else {
+                        try {
+                          setGeneratingWorkflow(true);
+                          const res = await api.get(`/competitions/${id}/workflow`);
+                          setComp(prev => ({ ...prev, ai_workflow: res.workflow }));
+                          setShowWorkflow(true);
+                        } catch (err) {
+                          alert(err.message || 'Failed to generate workflow');
+                        } finally {
+                          setGeneratingWorkflow(false);
+                        }
+                      }
+                    }}
+                    disabled={generatingWorkflow}
+                    className="flex shrink-0 w-fit items-center gap-2 px-4 py-2 bg-[#F4F0FF] text-[#7856FF] rounded-xl text-[13px] font-[600] hover:bg-[#E8DDFF] transition-colors disabled:opacity-60"
+                  >
+                    {generatingWorkflow ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {generatingWorkflow ? 'Generating...' : (comp.ai_workflow && comp.ai_workflow.length > 0 ? 'View Strategy' : 'Generate Strategy')}
+                  </button>
+                )}
+              </div>
+
+              {showWorkflow && comp.ai_workflow && Array.isArray(comp.ai_workflow) && comp.ai_workflow.length > 0 && (
+                <div className="space-y-4 mt-5 pt-5 border-t border-[#F3F4F6]">
                   {comp.ai_workflow.map((phase, idx) => (
                     <div key={idx} className="flex gap-4 p-4 rounded-xl bg-[#FAFAFA] border border-[#F3F4F6]">
                       <div className="text-2xl mt-0.5 shrink-0">{phase.icon || '🚀'}</div>
@@ -207,8 +237,8 @@ export default function CompetitionDetail() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Right: sidebar */}

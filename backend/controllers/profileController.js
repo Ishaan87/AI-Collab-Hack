@@ -137,7 +137,7 @@ export const updateProfile = async (req, res) => {
   try {
     const {
       username, full_name, mobile_number, city,
-      avatar_url, bio, headline, website_url, linkedin_url,
+      avatar_url, bio, headline, website_url, linkedin_url, github_username
     } = req.body;
 
     if (username) {
@@ -160,12 +160,13 @@ export const updateProfile = async (req, res) => {
         headline            = COALESCE($7, headline),
         website_url         = COALESCE($8, website_url),
         linkedin_url        = COALESCE($9, linkedin_url),
+        github_username     = COALESCE($10, github_username),
         is_profile_complete = TRUE,
         updated_at          = NOW()
-       WHERE id = $10
+       WHERE id = $11
        RETURNING id, username, full_name, mobile_number, city, avatar_url,
-                 bio, headline, website_url, linkedin_url, is_profile_complete`,
-      [username, full_name, mobile_number, city, avatar_url, bio, headline, website_url, linkedin_url, req.user.id]
+                 bio, headline, website_url, linkedin_url, github_username, is_profile_complete`,
+      [username, full_name, mobile_number, city, avatar_url, bio, headline, website_url, linkedin_url, github_username, req.user.id]
     );
 
     res.json({ success: true, message: 'Profile updated.', user: result.rows[0] });

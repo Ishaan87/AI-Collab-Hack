@@ -34,7 +34,7 @@ export default function NotificationBell() {
     try {
       const [notifData, inviteData] = await Promise.all([
         api.get('/notifications'),
-        api.get('/invites'),
+        api.get('/invites/my'),
       ]);
       setNotifs(notifData.notifications || []);
       setUnread(notifData.unread_count || 0);

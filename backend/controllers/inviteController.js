@@ -12,23 +12,34 @@ const createNotification = async (userId, type, title, body, relatedId) => {
 // ─── SEND INVITE ──────────────────────────────────────────────────────────────
 export const sendInvite = async (req, res) => {
   try {
-    const { competition_id, receiver_id, message } = req.body;
-
-    if (receiver_id === req.user.id)
-      return res.status(400).json({ success: false, message: "You can't invite yourself." });
+    const { competition_id, receiver_id, receiver_username, message } = req.body;
 
     // Check competition exists
     const comp = await pool.query('SELECT id, title FROM competitions WHERE id = $1', [competition_id]);
     if (!comp.rows.length)
       return res.status(404).json({ success: false, message: 'Competition not found.' });
 
-    // Check receiver exists and has completed assessment
-    const receiver = await pool.query(
-      'SELECT id, username, full_name, is_assessment_done FROM users WHERE id = $1',
-      [receiver_id]
-    );
+    // Find receiver
+    let queryStr = '';
+    let queryParams = [];
+    if (receiver_id) {
+      queryStr = 'SELECT id, username, full_name, is_assessment_done FROM users WHERE id = $1';
+      queryParams = [receiver_id];
+    } else if (receiver_username) {
+      queryStr = 'SELECT id, username, full_name, is_assessment_done FROM users WHERE username = $1';
+      queryParams = [receiver_username];
+    } else {
+      return res.status(400).json({ success: false, message: 'Must provide receiver_id or receiver_username.' });
+    }
+
+    const receiver = await pool.query(queryStr, queryParams);
     if (!receiver.rows.length)
       return res.status(404).json({ success: false, message: 'User not found.' });
+
+    const finalReceiverId = receiver.rows[0].id;
+
+    if (finalReceiverId === req.user.id)
+      return res.status(400).json({ success: false, message: "You can't invite yourself." });
 
     // Insert invite (ON CONFLICT handles duplicate gracefully)
     const invite = await pool.query(
@@ -37,13 +48,13 @@ export const sendInvite = async (req, res) => {
        ON CONFLICT (competition_id, sender_id, receiver_id)
        DO UPDATE SET status = 'pending', expires_at = NOW() + INTERVAL '48 hours', created_at = NOW()
        RETURNING *`,
-      [competition_id, req.user.id, receiver_id, message || null]
+      [competition_id, req.user.id, finalReceiverId, message || null]
     );
 
     // Notify receiver
     const senderName = req.user.full_name || req.user.username;
     await createNotification(
-      receiver_id,
+      finalReceiverId,
       'team_invite',
       `${senderName} wants to team up!`,
       `You've been invited to join a team for "${comp.rows[0].title}"`,

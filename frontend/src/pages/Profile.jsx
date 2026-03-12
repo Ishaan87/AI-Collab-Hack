@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts';
-import { MapPin, LinkIcon, Edit3, Grid, Trophy, CheckCircle2, Loader2, ExternalLink } from 'lucide-react';
+import { MapPin, LinkIcon, Edit3, Grid, Trophy, CheckCircle2, Loader2, ExternalLink, Mail, Phone, Github, Linkedin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import AssessmentBanner from '../components/AssessmentBanner';
@@ -97,8 +97,11 @@ export default function Profile() {
                 <h1 className="text-2xl font-bold tracking-tight text-gray-900">
                   {profile.full_name || profile.username}
                 </h1>
+                {profile.full_name && profile.username && (
+                  <p className="text-sm font-medium text-indigo-500 mb-1">@{profile.username}</p>
+                )}
                 {profile.headline && (
-                  <p className="text-sm font-medium text-gray-500">{profile.headline}</p>
+                  <p className="text-sm font-medium text-gray-500 mt-1">{profile.headline}</p>
                 )}
               </div>
             </div>
@@ -119,10 +122,34 @@ export default function Profile() {
                 <MapPin className="w-4 h-4 mr-1 text-gray-400" /> {profile.city}
               </span>
             )}
+            {isOwnProfile && profile.email && (
+              <span className="flex items-center">
+                <Mail className="w-4 h-4 mr-1 text-gray-400" /> {profile.email}
+              </span>
+            )}
+            {isOwnProfile && profile.mobile_number && (
+              <span className="flex items-center">
+                <Phone className="w-4 h-4 mr-1 text-gray-400" /> {profile.mobile_number}
+              </span>
+            )}
             {profile.website_url && (
               <a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-indigo-600 transition-colors">
                 <LinkIcon className="w-4 h-4 mr-1 text-gray-400" />
                 {profile.website_url.replace(/^https?:\/\//, '')}
+                <ExternalLink className="w-3 h-3 ml-1 opacity-50" />
+              </a>
+            )}
+            {profile.linkedin_url && (
+              <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-indigo-600 transition-colors">
+                <Linkedin className="w-4 h-4 mr-1 text-gray-400" />
+                LinkedIn
+                <ExternalLink className="w-3 h-3 ml-1 opacity-50" />
+              </a>
+            )}
+            {profile.github_username && (
+              <a href={`https://github.com/${profile.github_username.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-indigo-600 transition-colors">
+                <Github className="w-4 h-4 mr-1 text-gray-400" />
+                {profile.github_username.replace('@', '')}
                 <ExternalLink className="w-3 h-3 ml-1 opacity-50" />
               </a>
             )}
@@ -132,11 +159,6 @@ export default function Profile() {
                 Elo: {profile.elo_score?.toLocaleString()} ({profile.tier || 'Explorer'})
               </span>
             )}
-            {/* {profile.rating_confidence && (
-              <span className="text-xs text-gray-400 capitalize">
-                {profile.rating_confidence} confidence
-              </span>
-            )} */}
           </div>
 
           {profile.bio && (

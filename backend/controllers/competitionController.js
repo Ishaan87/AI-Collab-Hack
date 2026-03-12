@@ -276,6 +276,7 @@ export const getMyCompetitions = async (req, res) => {
     const result = await pool.query(
       `SELECT c.id, c.title, c.type, c.organizer, c.prize_pool, c.banner_url,
               c.start_date, c.end_date, c.status, c.is_online, c.location,
+              c.min_team_size, c.max_team_size,
               cr.registration_status, cr.registered_at, cr.team_id
        FROM competition_registrations cr
        JOIN competitions c ON c.id = cr.competition_id

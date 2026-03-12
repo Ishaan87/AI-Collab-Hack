@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, AtSign, Phone, MapPin, Camera, ChevronDown, CheckCircle2, Loader2 } from 'lucide-react';
+import { User, AtSign, Phone, MapPin, Camera, ChevronDown, CheckCircle2, Loader2, Github } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 
@@ -23,6 +23,7 @@ export default function UpdateProfile() {
     avatar_url:    '',
     website_url:   '',
     linkedin_url:  '',
+    github_username: '',
   });
 
   // Pre-fill form with existing data if editing
@@ -38,6 +39,7 @@ export default function UpdateProfile() {
         avatar_url:    user.avatar_url    || '',
         website_url:   user.website_url   || '',
         linkedin_url:  user.linkedin_url  || '',
+        github_username: user.github_username || '',
       });
     }
   }, [user]);
@@ -232,6 +234,19 @@ export default function UpdateProfile() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 ml-1">GitHub Username</label>
+                    <div className="relative">
+                      <Github className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        name="github_username"
+                        value={form.github_username}
+                        onChange={handleChange}
+                        type="text" placeholder="e.g. lovish123"
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all focus:bg-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2 lg:col-span-2">
                     <label className="text-sm font-bold text-gray-700 ml-1">LinkedIn URL</label>
                     <input
                       name="linkedin_url"

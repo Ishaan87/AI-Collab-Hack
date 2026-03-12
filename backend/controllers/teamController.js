@@ -12,6 +12,7 @@ export const getMyTeams = async (req, res) => {
         t.last_active_at, t.created_at,
         tm.role AS my_role,
         c.id AS competition_id, c.title AS competition_title, c.status AS competition_status,
+        c.min_team_size, c.max_team_size,
         COUNT(tm2.id)::int AS member_count,
         t.max_members
        FROM team_members tm
@@ -34,7 +35,17 @@ export const getMyTeams = async (req, res) => {
            WHERE tm.team_id = $1`,
           [team.id]
         );
-        return { ...team, members: members.rows };
+
+        // Fetch pending invites for THIS team
+        const pendingInvites = await pool.query(
+          `SELECT u.id, u.username, u.full_name, u.avatar_url, 'pending' AS role
+           FROM team_invITES ti
+           JOIN users u ON u.id = ti.receiver_id
+           WHERE ti.team_id = $1 AND ti.status = 'pending'`,
+          [team.id]
+        );
+
+        return { ...team, members: [...members.rows, ...pendingInvites.rows] };
       })
     );
 
@@ -178,6 +189,37 @@ export const joinTeam = async (req, res) => {
   } catch (err) {
     if (err.code === '23505')
       return res.status(409).json({ success: false, message: 'Already in this team.' });
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+// ─── REMOVE MEMBER (Leader only) ──────────────────────────────────────────────
+export const removeMember = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+
+    const team = await pool.query('SELECT created_by FROM teams WHERE id = $1', [id]);
+    if (!team.rows.length)
+      return res.status(404).json({ success: false, message: 'Team not found.' });
+
+    if (team.rows[0].created_by !== req.user.id)
+      return res.status(403).json({ success: false, message: 'Only the team leader can remove members.' });
+
+    if (req.user.id === userId)
+      return res.status(400).json({ success: false, message: 'Leader cannot remove themselves.' });
+
+    await pool.query(
+      'DELETE FROM team_members WHERE team_id = $1 AND user_id = $2',
+      [id, userId]
+    );
+
+    await pool.query(
+      "UPDATE competition_registrations SET team_id = NULL, registration_status = 'registered' WHERE team_id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
+    res.json({ success: true, message: 'Member removed from team.' });
+  } catch (err) {
     res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
