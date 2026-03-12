@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Loader2, AlertCircle, CheckCircle2, XCircle,
   Clock, Trophy, ChevronRight, Bell, Inbox, Copy, UserMinus, LogOut,
-  Edit2, X, UserPlus
+  Edit2, X, UserPlus, MessageCircle
 } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -74,7 +74,7 @@ function InviteCard({ invite, onAccept, onDecline, accepting, declining }) {
   );
 }
 
-function TeamCard({ team, currentUser, onLeaveTeam, onRemoveMember, onEditTeam, onInviteMember }) {
+function TeamCard({ team, currentUser, onLeaveTeam, onRemoveMember, onEditTeam, onInviteMember, onMessageMember }) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const isLeader = team.my_role === 'leader';
@@ -141,15 +141,23 @@ function TeamCard({ team, currentUser, onLeaveTeam, onRemoveMember, onEditTeam, 
         <div className="space-y-2 mt-2 pt-2 border-t border-[#F3F4F6]">
           {team.members.map(m => (
             <div key={m.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-[#FAFAFA] transition-colors">
-              <div className="flex items-center gap-2">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-[700] overflow-hidden ${m.role === 'pending' ? 'bg-orange-100 text-orange-600 grayscale opacity-70' : 'bg-[#E8DDFF] text-[#7856FF]'}`}>
+              <div 
+                className={`flex items-center gap-2 ${m.role !== 'pending' ? 'cursor-pointer group/member' : ''}`}
+                onClick={(e) => {
+                  if (m.role !== 'pending') {
+                    e.stopPropagation();
+                    navigate(`/profile/${m.username}`);
+                  }
+                }}
+              >
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-[700] overflow-hidden ${m.role === 'pending' ? 'bg-orange-100 text-orange-600 grayscale opacity-70' : 'bg-[#E8DDFF] text-[#7856FF] ring-2 ring-transparent group-hover/member:ring-indigo-200 transition-all'}`}>
                   {m.avatar_url
                     ? <img src={m.avatar_url} alt="" className="w-full h-full object-cover" />
                     : (m.full_name || m.username || '?').charAt(0)
                   }
                 </div>
                 <div>
-                  <p className={`text-[13px] font-[500] leading-none ${m.role === 'pending' ? 'text-gray-500' : 'text-[#201F24]'}`}>
+                  <p className={`text-[13px] font-[500] leading-none ${m.role === 'pending' ? 'text-gray-500' : 'text-[#201F24] group-hover/member:text-indigo-600 transition-colors'}`}>
                     {m.full_name || m.username} {m.id === currentUser.id && '(You)'}
                   </p>
                   {m.role === 'pending' ? (
@@ -160,15 +168,27 @@ function TeamCard({ team, currentUser, onLeaveTeam, onRemoveMember, onEditTeam, 
                 </div>
               </div>
               
-              {isLeader && m.id !== currentUser.id && m.role !== 'pending' && (
-                 <button
-                   onClick={(e) => { e.stopPropagation(); onRemoveMember(team.id, m.id); }}
-                   className="p-1.5 text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                   title="Remove Member"
-                 >
-                   <UserMinus className="w-4 h-4" />
-                 </button>
-              )}
+              <div className="flex items-center gap-1">
+                {m.id !== currentUser.id && m.role !== 'pending' && (
+                  <button
+                     onClick={(e) => { e.stopPropagation(); onMessageMember(m); }}
+                     className="p-1.5 text-[#9CA3AF] hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                     title="Send Message"
+                  >
+                     <MessageCircle className="w-4 h-4" />
+                  </button>
+                )}
+                
+                {isLeader && m.id !== currentUser.id && m.role !== 'pending' && (
+                   <button
+                     onClick={(e) => { e.stopPropagation(); onRemoveMember(team.id, m.id); }}
+                     className="p-1.5 text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                     title="Remove Member"
+                   >
+                     <UserMinus className="w-4 h-4" />
+                   </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -471,6 +491,125 @@ function InviteMemberModal({ team, onClose, onSuccess }) {
   );
 }
 
+function JoinTeamByCodeModal({ onClose, onSuccess }) {
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setError('');
+      await api.post(`/teams/join`, { invite_code: code });
+      alert('Successfully joined the team!');
+      onSuccess();
+    } catch (err) {
+      setError(err.message || 'Failed to join team. Invalid code or team is full.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl z-10">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
+              <Users className="w-4 h-4" />
+            </div>
+            <h2 className="text-[18px] font-[700] text-[#201F24]">Join Team</h2>
+          </div>
+          <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#201F24]"><X className="w-5 h-5"/></button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-[13px] font-[600] text-[#374151] mb-1">Invitation Code</label>
+            <input 
+              required value={code} onChange={e => setCode(e.target.value.toUpperCase())} autoFocus
+              className="w-full px-4 py-2.5 text-[14px] text-center font-mono tracking-widest border border-[#E5E7EB] rounded-xl outline-none focus:border-[#7856FF] focus:ring-1 focus:ring-[#7856FF] bg-[#FAFAFA] focus:bg-white"
+              placeholder="e.g. A3F9B2C1D4"
+            />
+          </div>
+          
+          {error && <p className="text-[12px] text-red-500 font-[500]">{error}</p>}
+          
+          <button 
+            type="submit" disabled={loading || !code.trim()}
+            className="w-full py-2.5 bg-[#7856FF] text-white rounded-xl text-[14px] font-[600] hover:bg-[#6846EB] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin"/>} 
+            {loading ? 'Joining...' : 'Join Team'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function MessageMemberModal({ member, onClose }) {
+  const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setError('');
+      await api.post(`/notifications/message`, { 
+        receiver_id: member.id,
+        message: msg
+      });
+      alert(`Message sent to ${member.full_name || member.username}!`);
+      onClose();
+    } catch (err) {
+      setError(err.message || 'Failed to send message.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl z-10">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
+              <MessageCircle className="w-4 h-4" />
+            </div>
+            <h2 className="text-[18px] font-[700] text-[#201F24]">Send Message</h2>
+          </div>
+          <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#201F24]"><X className="w-5 h-5"/></button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-[13px] font-[600] text-[#374151] mb-1">To: {member.full_name || member.username}</label>
+            <textarea 
+              required value={msg} onChange={e => setMsg(e.target.value)} rows={3} autoFocus
+              className="w-full px-4 py-2.5 text-[14px] border border-[#E5E7EB] rounded-xl outline-none focus:border-[#7856FF] focus:ring-1 focus:ring-[#7856FF] bg-[#FAFAFA] focus:bg-white resize-none"
+              placeholder="Hey, let's sync up about the backend logic..."
+            />
+          </div>
+          
+          {error && <p className="text-[12px] text-red-500 font-[500]">{error}</p>}
+          
+          <button 
+            type="submit" disabled={loading}
+            className="w-full py-2.5 bg-[#7856FF] text-white rounded-xl text-[14px] font-[600] hover:bg-[#6846EB] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin"/>} 
+            {loading ? 'Sending...' : 'Send Message'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function MyTeams() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -485,6 +624,8 @@ export default function MyTeams() {
   const [editingTeam, setEditingTeam] = useState(null);
   const [invitingToTeam, setInvitingToTeam] = useState(null);
   const [creatingTeamForComp, setCreatingTeamForComp] = useState(null);
+  const [messagingMember, setMessagingMember] = useState(null);
+  const [joiningByCode, setJoiningByCode] = useState(false);
 
   const fetchAll = async () => {
     try {
@@ -562,12 +703,20 @@ export default function MyTeams() {
           <h1 className="text-[32px] font-[600] tracking-tight text-[#201F24] mb-1">My Teams</h1>
           <p className="text-[#5C5C5C] text-[16px]">Your active teams and pending collaboration invites.</p>
         </div>
-        <button
-          onClick={() => navigate('/discover')}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[#7856FF] text-white rounded-full font-[500] text-[14px] hover:bg-[#6846EB] transition-colors shadow-sm shadow-[#7856FF]/20"
-        >
-          <Trophy className="w-4 h-4" /> Discover Events
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setJoiningByCode(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] rounded-full font-[500] text-[14px] hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            <Users className="w-4 h-4" /> Join via Code
+          </button>
+          <button
+            onClick={() => navigate('/discover')}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#7856FF] text-white rounded-full font-[500] text-[14px] hover:bg-[#6846EB] transition-colors shadow-sm shadow-[#7856FF]/20"
+          >
+            <Trophy className="w-4 h-4" /> Discover Events
+          </button>
+        </div>
       </div>
 
       {/* Error */}
@@ -650,6 +799,7 @@ export default function MyTeams() {
                   onRemoveMember={handleRemoveMember}
                   onEditTeam={setEditingTeam}
                   onInviteMember={setInvitingToTeam}
+                  onMessageMember={setMessagingMember}
                 />
               ))}
               {solos.map(comp => (
@@ -716,6 +866,20 @@ export default function MyTeams() {
           team={invitingToTeam}
           onClose={() => setInvitingToTeam(null)}
           onSuccess={() => setInvitingToTeam(null)}
+        />
+      )}
+      
+      {messagingMember && (
+        <MessageMemberModal
+          member={messagingMember}
+          onClose={() => setMessagingMember(null)}
+        />
+      )}
+
+      {joiningByCode && (
+        <JoinTeamByCodeModal
+          onClose={() => setJoiningByCode(false)}
+          onSuccess={() => { setJoiningByCode(false); fetchAll(); }}
         />
       )}
     </div>

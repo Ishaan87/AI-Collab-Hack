@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Check, CheckCheck, Users, Trophy, UserCheck, UserX } from 'lucide-react';
+import { Bell, Check, CheckCheck, Users, Trophy, UserCheck, UserX, MessageCircle } from 'lucide-react';
 import { api } from '../api';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,6 +8,7 @@ const TYPE_CONFIG = {
   invite_accepted: { icon: UserCheck, color: 'text-green-600', bg: 'bg-green-100' },
   invite_declined: { icon: UserX,     color: 'text-red-500',   bg: 'bg-red-100' },
   team_formed:     { icon: Trophy,    color: 'text-amber-600', bg: 'bg-amber-100' },
+  direct_message:  { icon: MessageCircle, color: 'text-blue-500', bg: 'bg-blue-100' }
 };
 
 const timeAgo = (date) => {

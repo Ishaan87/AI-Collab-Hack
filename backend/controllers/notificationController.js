@@ -46,3 +46,27 @@ export const markAllRead = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
+
+// ─── SEND DIRECT MESSAGE ──────────────────────────────────────────────────────
+export const sendMessage = async (req, res) => {
+  try {
+    const { receiver_id, message } = req.body;
+    
+    if (!receiver_id || !message?.trim()) {
+      return res.status(400).json({ success: false, message: 'Missing receiver_id or message content.' });
+    }
+
+    const senderName = req.user.full_name || req.user.username;
+
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, body, related_id)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [receiver_id, 'direct_message', `New message from ${senderName}`, message.trim(), req.user.id]
+    );
+
+    res.json({ success: true, message: 'Message sent successfully.' });
+  } catch (err) {
+    console.error('sendMessage error:', err);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
