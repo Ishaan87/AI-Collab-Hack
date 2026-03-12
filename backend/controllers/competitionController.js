@@ -425,7 +425,16 @@ export const getCollabSuggestions = async (req, res) => {
       ]
     );
 
+    console.log(`[Collab] User ELO: ${userElo}, Needed categories:`, neededCategories);
+    console.log(`[Collab] Candidates found: ${candidates.rows.length}`);
+
     if (candidates.rows.length < 2) {
+      console.log('[Collab] Not enough candidates found matching criteria:', {
+        minElo: Math.max(0, userElo - 400),
+        maxElo: userElo + 400,
+        categories: neededCategories,
+        compId: id
+      });
       return res.json({
         success:     true,
         suggestions: [],

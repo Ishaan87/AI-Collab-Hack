@@ -158,7 +158,7 @@ export default function MyTeams() {
   const handleAccept = async (inviteId) => {
     try {
       setAccepting(inviteId);
-      await api.post(`/invites/${inviteId}/accept`);
+      await api.patch(`/invites/${inviteId}/accept`);
       setInvites(prev => prev.filter(i => i.id !== inviteId));
       fetchAll(); // refresh teams
     } catch (err) {
@@ -171,7 +171,7 @@ export default function MyTeams() {
   const handleDecline = async (inviteId) => {
     try {
       setDeclining(inviteId);
-      await api.post(`/invites/${inviteId}/decline`);
+      await api.patch(`/invites/${inviteId}/decline`);
       setInvites(prev => prev.filter(i => i.id !== inviteId));
     } catch (err) {
       setError(err.message);

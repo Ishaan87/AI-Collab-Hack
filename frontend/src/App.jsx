@@ -17,6 +17,7 @@ import DashboardLayout from './components/DashboardLayout';
 import HostEvent       from './pages/HostEvent';
 import CompetitionDetail from './pages/CompetitionDetail';
 import MyEvents        from './pages/MyEvents';
+import Assessment      from './pages/Assessment';
 
 import './App.css';
 import './index.css';
@@ -60,21 +61,25 @@ function AppRoutes() {
       <Route path="/profile/build"  element={<ProtectedRoute><ProfileBuilder /></ProtectedRoute>} />
 
       {/* Dashboard pages — inside DashboardLayout */}
-      <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+      <Route element={<DashboardLayout />}>
+        {/* Public */}
         <Route path="/discover"              element={<Discover />} />
         <Route path="/leaderboard"           element={<Leaderboard />} />
-        <Route path="/my-teams"              element={<MyTeams />} />
-        <Route path="/profile"               element={<Profile />} />
-        <Route path="/profile/:username"     element={<Profile />} />
-        <Route path="/smart-match"           element={<SmartMatch />} />
-        <Route path="/competitions/new"      element={<HostEvent />} />
         <Route path="/competitions/:id"      element={<CompetitionDetail />} />
-        <Route path="/my-events"             element={<MyEvents />} />
+        <Route path="/profile/:username"     element={<Profile />} />
+
+        {/* Protected */}
+        <Route path="/my-teams"              element={<ProtectedRoute><MyTeams /></ProtectedRoute>} />
+        <Route path="/profile"               element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/smart-match"           element={<ProtectedRoute><SmartMatch /></ProtectedRoute>} />
+        <Route path="/competitions/new"      element={<ProtectedRoute><HostEvent /></ProtectedRoute>} />
+        <Route path="/my-events"             element={<ProtectedRoute><MyEvents /></ProtectedRoute>} />
+        <Route path="/assessment"            element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
 
         {/* Placeholders */}
-        <Route path="/sponsored"      element={<div className="p-8 font-bold text-[#7856FF]">Sponsored Challenges (Coming Soon)</div>} />
-        <Route path="/recommendations" element={<div className="p-8 font-bold text-[#7856FF]">My Recommendations (Coming Soon)</div>} />
-        <Route path="/activity"       element={<div className="p-8 font-bold text-[#7856FF]">My Activity (Coming Soon)</div>} />
+        <Route path="/sponsored"      element={<ProtectedRoute><div className="p-8 font-bold text-[#7856FF]">Sponsored Challenges (Coming Soon)</div></ProtectedRoute>} />
+        <Route path="/recommendations" element={<ProtectedRoute><div className="p-8 font-bold text-[#7856FF]">My Recommendations (Coming Soon)</div></ProtectedRoute>} />
+        <Route path="/activity"       element={<ProtectedRoute><div className="p-8 font-bold text-[#7856FF]">My Activity (Coming Soon)</div></ProtectedRoute>} />
       </Route>
 
       {/* Fallback */}

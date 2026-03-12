@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import NotificationBell from '../pages/NotificationBell';
 
 /* ─────────────────────────────────────────────
    Route / Section config
@@ -26,7 +27,7 @@ const navSections = [
         items: [
             { name: 'My Teams', path: '/my-teams', icon: Target },
             { name: 'Sponsored Challenges', path: '/sponsored', icon: Briefcase },
-            { name: 'Host', path: '/host', icon: PlusSquare },
+            { name: 'Host', path: '/competitions/new', icon: PlusSquare },
         ],
     },
     {
@@ -171,7 +172,7 @@ function NavSection({ section, collapsed }) {
    User Footer (avatar row + settings popover)
 ───────────────────────────────────────────── */
 function UserFooter({ user, profile, collapsed }) {
-    const { signOut } = useAuth();
+    const { logout } = useAuth();
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
@@ -185,7 +186,7 @@ function UserFooter({ user, profile, collapsed }) {
 
     const handleLogout = async () => {
         setOpen(false);
-        await signOut();
+        await logout();
         navigate('/login');
     };
 
@@ -424,15 +425,7 @@ function TopBar({ collapsed }) {
             {/* Right controls */}
             <div className="flex items-center gap-2">
                 {/* Notifications */}
-                <button className="
-                    w-8 h-8 rounded-lg flex items-center justify-center
-                    text-[#888] dark:text-[#666]
-                    hover:bg-[#f0ede9] dark:hover:bg-[#1e1e1e]
-                    hover:text-[#333] dark:hover:text-[#ccc]
-                    transition-all
-                ">
-                    <Bell className="w-4 h-4" />
-                </button>
+                <NotificationBell />
 
                 {/* Theme toggle */}
                 <button

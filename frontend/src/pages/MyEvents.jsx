@@ -35,7 +35,7 @@ export default function MyEvents() {
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   useEffect(() => {
-    api.get('/competitions/my-hosted')
+    api.get('/competitions/hosted')
       .then(data => setEvents(data.competitions || []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));

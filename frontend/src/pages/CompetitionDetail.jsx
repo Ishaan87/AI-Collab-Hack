@@ -176,15 +176,37 @@ export default function CompetitionDetail() {
             )}
 
             {/* AI Workflow */}
-            {comp.ai_workflow && (
+            {comp.ai_workflow && Array.isArray(comp.ai_workflow) && comp.ai_workflow.length > 0 && (
               <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6">
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="w-4 h-4 text-[#7856FF]" />
-                  <h2 className="text-[15px] font-[600] text-[#374151]">AI-Generated Insights</h2>
+                  <h2 className="text-[16px] font-[600] text-[#374151]">AI-Generated Strategy & Workflow</h2>
                 </div>
-                <p className="text-[13px] text-[#5C5C5C] leading-relaxed whitespace-pre-wrap">
-                  {comp.ai_workflow}
-                </p>
+                <div className="space-y-4">
+                  {comp.ai_workflow.map((phase, idx) => (
+                    <div key={idx} className="flex gap-4 p-4 rounded-xl bg-[#FAFAFA] border border-[#F3F4F6]">
+                      <div className="text-2xl mt-0.5 shrink-0">{phase.icon || '🚀'}</div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <h3 className="font-[600] text-[14px] text-[#201F24]">{phase.phase}</h3>
+                          <span className="text-[11px] font-[600] px-2 py-0.5 bg-[#F4F0FF] text-[#7856FF] border border-[#DDD6FE] rounded-full whitespace-nowrap">
+                            {phase.timeline}
+                          </span>
+                        </div>
+                        <ul className="list-disc list-inside text-[13px] text-[#5C5C5C] leading-relaxed mb-2.5 space-y-0.5">
+                          {phase.steps?.map((step, i) => (
+                            <li key={i}>{step}</li>
+                          ))}
+                        </ul>
+                        {phase.tip && (
+                          <div className="inline-block text-[12px] bg-[#FEF3C7] text-[#92400E] px-3 py-1.5 rounded-lg font-[500] border border-[#FDE68A]">
+                            💡 Tip: {phase.tip}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

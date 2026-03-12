@@ -1,173 +1,155 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../api';
+import { Search, MapPin, Users, Calendar, Loader2, Trophy, ArrowRight } from 'lucide-react';
 
 const tabsData = [
-  {
-    id: 'hackathons',
-    label: 'Hackathons',
-    imgSrc: 'https://cdn.prod.website-files.com/6350808bc45bd0c902af10e6/66aca46a2e87f778fe899f3b_am_6_personas_sellers%202.avif',
-    glow: 'from-[#E8400D] via-[#FFEED8] to-[#D0B2FF]',
-    content: {
-      title: 'Build winning hackathon teams',
-      linkText: 'Explore Hackathons',
-      feature1Title: 'Match by tech stack',
-      feature1Desc: 'Find the perfect mix of frontend, backend, and UI/UX talent based on verified GitHub activity and skill weighting.',
-      feature2Title: 'Checkpoint verification',
-      feature2Desc: 'Keep your team accountable and on track with milestone tracking, reducing the dreaded hackathon drop-out rate.'
-    }
-  },
-  {
-    id: 'case-competitions',
-    label: 'Case Competitions',
-    imgSrc: 'https://cdn.prod.website-files.com/6350808bc45bd0c902af10e6/66aca8430056a00245b85bf7_am_7_personas_sales_leaders%202.avif',
-    glow: 'from-[#FFEED8] via-[#FFD7F0] to-[#D0B2FF]',
-    content: {
-      title: 'Form strategic consulting squads',
-      linkText: 'Explore Case Competitions',
-      feature1Title: 'Interdisciplinary matching',
-      feature1Desc: 'Combine analytical minds with presentation experts to tackle complex business cases effectively.',
-      feature2Title: 'Past performance weighting',
-      feature2Desc: 'Use our Elo-style peer review system to find reliable teammates with proven strategic and presentation acumen.'
-    }
-  },
-  {
-    id: 'design-challenges',
-    label: 'Design Challenges',
-    imgSrc: 'https://cdn.prod.website-files.com/6350808bc45bd0c902af10e6/66aca84f860e0b6ca0cabcda_am_8_personas_founders_2%202.avif',
-    glow: 'from-[#99FFF9] via-[#C6ECE9] to-[#D0B2FF]',
-    content: {
-      title: 'Connect with creative visionaries',
-      linkText: 'Explore Design Challenges',
-      feature1Title: 'Portfolio-backed matching',
-      feature1Desc: 'Team up with UX researchers, UI designers, and 3D artists with verified creative credentials and peer ratings.',
-      feature2Title: 'Domain-specific podiums',
-      feature2Desc: 'Showcase your specific design skills and climb the leaderboards in creative-first competitions.'
-    }
-  },
-  {
-    id: 'coding-contests',
-    label: 'Coding Contests',
-    imgSrc: 'https://cdn.prod.website-files.com/6350808bc45bd0c902af10e6/66aca84f1064e578674a4da0_am_9_personas_revops%202.avif',
-    glow: 'from-[#B7EFB2] via-[#FFEF99] to-[#99FFF9]',
-    content: {
-      title: 'Dominate algorithmic programming',
-      linkText: 'Explore Coding Contests',
-      feature1Title: 'Verified Codeforces stats',
-      feature1Desc: "Don't rely on self-reported skills. We sync directly with LeetCode and Codeforces APIs to verify competitive programming ranks.",
-      feature2Title: 'Complementary logic pairing',
-      feature2Desc: "Find partners whose algorithmic strengths cover your weaknesses to maximize your team's overall point totals."
-    }
-  },
-  {
-    id: 'other-events',
-    label: 'Other Events',
-    imgSrc: 'https://cdn.prod.website-files.com/6350808bc45bd0c902af10e6/66aca84f84f3bc82100d704e_am_10_personas_marketers%202.avif',
-    glow: 'from-[#E8400D] via-[#FFEED8] to-[#99FFF9]',
-    content: {
-      title: 'Custom team formation for anything',
-      linkText: 'Explore Custom Events',
-      feature1Title: 'Adaptable skill clustering',
-      feature1Desc: "Whether it's a robotics build or a research paper, define your custom parameters and let AI build the optimal squad.",
-      feature2Title: 'Build your STEM reputation',
-      feature2Desc: 'Accumulate reliability ratings across all event types to become the most sought-after collaborator on campus.'
-    }
-  }
+  { id: 'hackathons', label: 'Hackathons', type: 'hackathon', imgSrc: 'https://cdn.prod.website-files.com/6350808bc45bd0c902af10e6/66aca46a2e87f778fe899f3b_am_6_personas_sellers%202.avif', glow: 'from-[#E8400D] via-[#FFEED8] to-[#D0B2FF]' },
+  { id: 'case-competitions', label: 'Case Competitions', type: 'case_study', imgSrc: 'https://cdn.prod.website-files.com/6350808bc45bd0c902af10e6/66aca8430056a00245b85bf7_am_7_personas_sales_leaders%202.avif', glow: 'from-[#FFEED8] via-[#FFD7F0] to-[#D0B2FF]' },
+  { id: 'design-challenges', label: 'Design Challenges', type: 'design', imgSrc: 'https://cdn.prod.website-files.com/6350808bc45bd0c902af10e6/66aca84f860e0b6ca0cabcda_am_8_personas_founders_2%202.avif', glow: 'from-[#99FFF9] via-[#C6ECE9] to-[#D0B2FF]' },
+  { id: 'coding-contests', label: 'Coding Contests', type: 'coding', imgSrc: 'https://cdn.prod.website-files.com/6350808bc45bd0c902af10e6/66aca84f1064e578674a4da0_am_9_personas_revops%202.avif', glow: 'from-[#B7EFB2] via-[#FFEF99] to-[#99FFF9]' },
+  { id: 'other-events', label: 'Other Events', type: 'other', imgSrc: 'https://cdn.prod.website-files.com/6350808bc45bd0c902af10e6/66aca84f84f3bc82100d704e_am_10_personas_marketers%202.avif', glow: 'from-[#E8400D] via-[#FFEED8] to-[#99FFF9]' }
 ];
 
 const Discover = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
+  const [competitions, setCompetitions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
+  const fetchCompetitions = async () => {
+    try {
+      setLoading(true);
+      const type = tabsData[activeTab].type;
+      const res = await api.get(`/competitions?type=${type}&search=${search}&limit=20`);
+      setCompetitions(res.competitions);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchCompetitions();
+    }, 300);
+    return () => clearTimeout(delay);
+  }, [activeTab, search]);
 
   return (
-    <section className="bg-white dark:bg-[#0f0f0f] py-16 relative overflow-hidden font-sans transition-colors duration-300">
+    <section className="bg-[#fcfcfc] dark:bg-[#0f0f0f] py-8 relative overflow-hidden font-sans min-h-screen">
       <div className="max-w-[1200px] mx-auto px-6">
+        
+        {/* Header & Search */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Discover Events</h1>
+            <p className="text-gray-500 mt-1">Find and join the best STEM competitions.</p>
+          </div>
+          <div className="relative w-full md:w-96">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input 
+              type="text" 
+              placeholder="Search by name, tag, or host..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+            />
+          </div>
+        </div>
 
-        {/* Tabs Container */}
-        <div className="bg-[#fcfcfc] dark:bg-[#141414] border border-gray-200 dark:border-[#2a2a2a] rounded-[20px] p-2 flex overflow-x-auto hide-scrollbar gap-2 mb-12 shadow-sm dark:shadow-none">
+        {/* Categories / Tabs Container */}
+        <div className="bg-white dark:bg-[#141414] border border-gray-100 dark:border-[#2a2a2a] rounded-3xl p-2 flex overflow-x-auto hide-scrollbar gap-2 mb-10 shadow-sm">
           {tabsData.map((tab, index) => {
             const isActive = activeTab === index;
             return (
               <div
                 key={tab.id}
                 onClick={() => setActiveTab(index)}
-                className={`relative flex-1 min-w-[180px] h-[240px] flex flex-col items-center pt-6 rounded-[16px] transition-all duration-300 cursor-pointer overflow-hidden ${isActive
-                  ? 'bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] shadow-sm'
-                  : 'border border-transparent hover:bg-gray-100/50 dark:hover:bg-[#1e1e1e]'
+                className={`relative flex-1 min-w-[180px] h-[200px] flex flex-col items-center pt-5 rounded-[20px] transition-all duration-300 cursor-pointer overflow-hidden ${isActive
+                  ? 'bg-gray-50 border border-gray-200 shadow-inner'
+                  : 'border border-transparent hover:bg-gray-50/50'
                   }`}
               >
-                <span className={`text-[17px] font-medium z-10 transition-colors duration-300 ${isActive
-                  ? 'text-gray-900 dark:text-[#f5f5f4]'
-                  : 'text-gray-400 dark:text-[#555]'
-                  }`}>
+                <span className={`text-[15px] font-bold z-10 transition-colors duration-300 ${isActive ? 'text-indigo-900' : 'text-gray-500'}`}>
                   {tab.label}
                 </span>
-
                 <img
                   src={tab.imgSrc}
                   alt={tab.label}
-                  className={`mt-auto w-auto h-[140px] object-contain z-10 transition-all duration-300 dark:invert ${isActive
-                    ? 'opacity-100'
-                    : 'opacity-40 dark:opacity-50 mix-blend-multiply dark:mix-blend-normal'
-                    }`}
+                  className={`mt-auto w-auto h-[120px] object-contain z-10 transition-all duration-300 ${isActive ? 'opacity-100 scale-105' : 'opacity-50 grayscale'}`}
                 />
-
-                {/* Gradient glow blob — active only */}
                 <div className={`absolute bottom-[-30px] left-1/2 -translate-x-1/2 w-[120px] h-[80px] bg-gradient-to-r ${tab.glow} blur-[20px] rounded-[100%] transition-opacity duration-500 z-0 ${isActive ? 'opacity-80' : 'opacity-0'}`} />
               </div>
             );
           })}
         </div>
 
-        {/* Tab Content Area */}
-        <div className="flex flex-col md:flex-row gap-12 lg:gap-24 pt-6 animate-fade-in">
-
-          {/* Left: Title + CTA */}
-          <div className="flex-[0.8] flex flex-col items-start">
-            <h3 className="text-[32px] md:text-[40px] leading-[1.1] font-medium text-[#1a1a1a] dark:text-[#f5f5f4] mb-8 tracking-tight">
-              {tabsData[activeTab].content.title}
-            </h3>
-            <button className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] shadow-sm text-black dark:text-[#f5f5f4] px-6 py-3 rounded-full font-medium text-[15px] hover:bg-gray-50 dark:hover:bg-[#252525] hover:border-[#7856FF] dark:hover:border-[#7856FF] hover:text-[#7856FF] dark:hover:text-[#c4b5fd] transition-all inline-flex items-center gap-2">
-              {tabsData[activeTab].content.linkText}
-              <span className="text-gray-400 dark:text-[#555]">&rarr;</span>
-            </button>
+        {/* Content Area */}
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
           </div>
-
-          {/* Right: Features */}
-          <div className="flex-[1.2] flex flex-col sm:flex-row gap-8 md:gap-12">
-            {/* Feature 1 */}
-            <div className="flex-1">
-              <h4 className="text-[20px] font-medium text-[#1a1a1a] dark:text-[#f5f5f4] mb-3">
-                {tabsData[activeTab].content.feature1Title}
-              </h4>
-              <p className="text-[16px] text-gray-500 dark:text-[#9ca3af] leading-[1.6]">
-                {tabsData[activeTab].content.feature1Desc}
-              </p>
-            </div>
-
-            {/* Vertical divider */}
-            <div className="hidden sm:block w-px bg-gray-200 dark:bg-[#2a2a2a]" />
-            <div className="sm:hidden w-full h-px bg-gray-200 dark:bg-[#2a2a2a]" />
-
-            {/* Feature 2 */}
-            <div className="flex-1">
-              <h4 className="text-[20px] font-medium text-[#1a1a1a] dark:text-[#f5f5f4] mb-3">
-                {tabsData[activeTab].content.feature2Title}
-              </h4>
-              <p className="text-[16px] text-gray-500 dark:text-[#9ca3af] leading-[1.6]">
-                {tabsData[activeTab].content.feature2Desc}
-              </p>
-            </div>
+        ) : competitions.length === 0 ? (
+          <div className="text-center py-20 bg-white border border-dashed border-gray-200 rounded-3xl">
+            <Trophy className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-900">No events found</h3>
+            <p className="text-gray-500 mt-1">Try adjusting your filters or search term.</p>
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {competitions.map((comp) => (
+              <div key={comp.id} className="group bg-white border border-gray-200 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-indigo-100/50 transition-all duration-300 hover:-translate-y-1 flex flex-col cursor-pointer" onClick={() => navigate(`/competitions/${comp.id}`)}>
+                {/* Banner Banner */}
+                <div className="h-40 bg-gray-100 relative overflow-hidden">
+                  {comp.banner_url ? (
+                    <img src={comp.banner_url} alt={comp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-indigo-100 to-purple-100"></div>
+                  )}
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                    {comp.prize_pool ? `$${comp.prize_pool.toLocaleString()}` : 'No Prize'}
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div className="p-6 flex-1 flex flex-col">
+                  {/* Organizer info */}
+                  <div className="flex items-center space-x-2 text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                    {comp.organizer_logo_url && <img src={comp.organizer_logo_url} className="w-4 h-4 rounded-full" />}
+                    <span>{comp.organizer || 'Independent'}</span>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors">
+                    {comp.title}
+                  </h3>
+
+                  <div className="space-y-2 mt-auto pt-4 border-t border-gray-100">
+                    <div className="flex items-center text-sm tracking-tight text-gray-500">
+                      <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                      {new Date(comp.start_date).toLocaleDateString()} - {new Date(comp.end_date).toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center text-sm tracking-tight text-gray-500">
+                      <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                      {comp.is_online ? 'Online / Remote' : (comp.location || 'Location TBA')}
+                    </div>
+                    <div className="flex items-center text-sm tracking-tight text-gray-500">
+                      <Users className="w-4 h-4 mr-2 text-gray-400" />
+                      {comp.registered_count} Registered (Teams of {comp.min_team_size}-{comp.max_team_size})
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
       </div>
-
       <style>{`
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in { animation: fadeIn 0.35s ease-out forwards; }
       `}</style>
     </section>
   );
